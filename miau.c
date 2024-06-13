@@ -6,7 +6,7 @@
 #include <math.h>
 #include <time.h>
 
-#define AMPLITUDE 16000
+#define AMPLITUDE 28000
 #define PI2 6.28318530718
 
 struct mi_Note {
@@ -132,11 +132,12 @@ void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
 
     fprintf(stdout, "line(%d) time(%f)\n", line, seq->time);
     for (int i = 0; i < len; i++) {
-        double sample;
+        double sample = 0;
         for (int j = 0; j < MIAU_MAX_CHANNELS; j++) {
-            sample = _process_channel(s, line, &(seq->channels[j]));
-            buffer[i] += AMPLITUDE * sample;
+            sample += _process_channel(s, line, &(seq->channels[j]));
         }
+        sample = (sample / MIAU_MAX_CHANNELS) * AMPLITUDE;
+        buffer[i] += sample;
     }
 }
 
