@@ -1,3 +1,4 @@
 miau
 libmiau.a
 *.o
+build/
