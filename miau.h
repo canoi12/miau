@@ -11,6 +11,12 @@
 #define MIAU_TRUE  1
 #define MIAU_FALSE 0
 
+// MIAU DEFINITIONS
+#define MIAU_MAX_SEQUENCERS 16
+#define MIAU_MAX_CHANNELS 4
+#define MIAU_MAX_PATTERNS 8
+#define MIAU_MAX_NOTES 16
+
 enum {
     MIAU_SINE = 1,
     MIAU_SQUARE,
@@ -31,12 +37,13 @@ enum {
     MIAU_C7, MIAU_CS7, MIAU_D7, MIAU_DS7, MIAU_E7, MIAU_F7, MIAU_FS7, MIAU_G7, MIAU_GS7, MIAU_A7, MIAU_AS7, MIAU_B7
 };
 
+
 typedef struct mi_Note mi_Note;
 typedef struct mi_Pattern mi_Pattern;
+typedef struct mi_Channel mi_Channel;
 typedef struct mi_Sequencer mi_Sequencer;
 
-typedef struct mi_Channel mi_Channel;
-typedef struct mi_Sound mi_Sound;
+typedef struct mi_System mi_System;
 
 typedef struct {
     int freq;
@@ -44,11 +51,25 @@ typedef struct {
     int samples;
 } mi_Config;
 
-MIAUAPI int miau_init(const mi_Config* config);
-MIAUAPI void miau_quit(void);
+MIAUAPI mi_System* miau_init(const mi_Config* config);
+MIAUAPI void miau_quit(mi_System*);
 
-MIAUAPI void miau_generate_sample(short* stream, int len);
+MIAUAPI void miau_generate_sample(mi_System*, unsigned char* stream, int len);
 
+// Sequencer
+MIAUAPI mi_Sequencer* miau_get_sequencer(mi_System*, int index);
+MIAUAPI mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index);
+
+MIAUAPI void miau_sequencer_set_playing(mi_Sequencer* seq, int playing);
+MIAUAPI void miau_sequencer_restart(mi_Sequencer* seq);
+
+// Channel
+MIAUAPI void miau_channel_set_waveform(mi_Channel*, int waveform);
+MIAUAPI mi_Pattern* miau_channel_get_pattern(mi_Channel*, int index);
+
+// Pattern
+MIAUAPI void miau_pattern_set_note(mi_Pattern*, int index, int note, int effect);
+#if 0
 MIAUAPI mi_Channel* miau_create_channel(int waveform, int size);
 MIAUAPI void miau_destroy_channel(mi_Channel* c);
 
@@ -67,5 +88,5 @@ MIAUAPI mi_Channel* miau_sound_get_channel(mi_Sound* sound, int index);
 MIAUAPI void miau_play_sound(mi_Sound* sound);
 MIAUAPI void miau_pause_sound(mi_Sound* sound);
 MIAUAPI void miau_stop_sound(mi_Sound* sound);
-
+#endif
 #endif /* _MIAU_H_ */
