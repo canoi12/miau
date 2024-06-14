@@ -26,9 +26,10 @@ struct mi_Channel {
 };
 
 struct mi_Sequencer {
+    int playing;
     float time;
+    float speed;
     int current_line;
-    int channel_count;
     mi_Channel channels[MIAU_MAX_CHANNELS];
 };
 
@@ -113,12 +114,11 @@ void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
     if (len <= 0) return;
     memset(stream, 0, len);
     short* buffer = (short*)stream;
-    float old_len = len;
     len = len / sizeof(short);
 
     mi_Sequencer* seq = s->sequencers;
 
-    seq->time += (float)len / s->sample_rate;
+    seq->time += ((float)len / (float)s->sample_rate) * seq->speed;
     if (seq->time >= 1.f) {
         seq->time = 0.f;
         seq->current_line += 1;
@@ -137,7 +137,7 @@ void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
             sample += _process_channel(s, line, &(seq->channels[j]));
         }
         sample = (sample / MIAU_MAX_CHANNELS) * AMPLITUDE;
-        buffer[i] += sample;
+        buffer[i] += (short)sample;
     }
 }
 
@@ -147,6 +147,16 @@ mi_Sequencer* miau_get_sequencer(mi_System* s, int index) {
     if (!s) return NULL;
     if (index < 0 || index >= MIAU_MAX_SEQUENCERS) return NULL;
     return s->sequencers + index;
+}
+
+void miau_sequencer_set_speed(mi_Sequencer* seq, float speed) {
+    if (!seq) return;
+    seq->speed = speed;
+}
+
+void miau_sequencer_set_playing(mi_Sequencer* seq, int playing) {
+    if (!seq) return;
+    seq->playing = playing;
 }
 
 mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index) {

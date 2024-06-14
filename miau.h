@@ -60,6 +60,7 @@ MIAUAPI void miau_generate_sample(mi_System*, unsigned char* stream, int len);
 MIAUAPI mi_Sequencer* miau_get_sequencer(mi_System*, int index);
 MIAUAPI mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index);
 
+MIAUAPI void miau_sequencer_set_speed(mi_Sequencer* seq, float speed);
 MIAUAPI void miau_sequencer_set_playing(mi_Sequencer* seq, int playing);
 MIAUAPI void miau_sequencer_restart(mi_Sequencer* seq);
 

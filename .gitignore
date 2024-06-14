@@ -2,3 +2,4 @@ miau
 libmiau.a
 *.o
 build/
+SDL2/
