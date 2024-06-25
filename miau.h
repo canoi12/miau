@@ -61,7 +61,9 @@ MIAUAPI mi_Sequencer* miau_get_sequencer(mi_System*, int index);
 MIAUAPI mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index);
 
 MIAUAPI void miau_sequencer_set_speed(mi_Sequencer* seq, float speed);
+MIAUAPI float miau_sequencer_get_speed(mi_Sequencer* seq);
 MIAUAPI void miau_sequencer_set_playing(mi_Sequencer* seq, int playing);
+MIAUAPI int miau_sequencer_get_playing(mi_Sequencer* seq);
 MIAUAPI void miau_sequencer_restart(mi_Sequencer* seq);
 
 // Channel
@@ -69,6 +71,7 @@ MIAUAPI void miau_channel_set_waveform(mi_Channel*, int waveform);
 MIAUAPI mi_Pattern* miau_channel_get_pattern(mi_Channel*, int index);
 
 // Pattern
+MIAUAPI void miau_pattern_clear(mi_Pattern*);
 MIAUAPI void miau_pattern_set_note(mi_Pattern*, int index, int note, int effect);
 #if 0
 MIAUAPI mi_Channel* miau_create_channel(int waveform, int size);

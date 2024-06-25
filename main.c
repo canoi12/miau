@@ -1,5 +1,12 @@
 #include "miau.h"
+
+#include <stdio.h>
+
+#if defined(_WIN32)
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 
 /*
 mi_Sequencer* seq;
@@ -25,6 +32,12 @@ while (sequencer_is_playing(seq));
 miau_sequencer_stop(seq);
 */
 
+int notes[] = {
+        MIAU_G4, MIAU_A4, MIAU_B4, MIAU_D5, MIAU_D5, MIAU_B4, MIAU_C5,
+        MIAU_G4, MIAU_A4, MIAU_B4, MIAU_D5, MIAU_D5, MIAU_C5, MIAU_B4,
+        MIAU_BREAK, MIAU_BREAK
+};
+
 void audio_callback(void* userdata, Uint8* stream, int len) {
     mi_System* s = (mi_System*)userdata;
     miau_generate_sample(s, stream, len);
@@ -47,15 +60,21 @@ int main(int argc, char** argv) {
     SDL_PauseAudioDevice(dev, 0);
 
     mi_Sequencer* seq = miau_get_sequencer(s, 0);
+    miau_sequencer_set_speed(seq, 8.f);
     mi_Channel* ch = miau_sequencer_get_channel(seq, 0);
     mi_Pattern* pt = miau_channel_get_pattern(ch, 0);
     miau_channel_set_waveform(ch, MIAU_TRIANGLE);
 
     ch = miau_sequencer_get_channel(seq, 1);
-    miau_channel_set_waveform(ch, MIAU_SQUARE);
+    miau_channel_set_waveform(ch, MIAU_TRIANGLE);
     mi_Pattern* p2 = miau_channel_get_pattern(ch, 0);
     miau_pattern_set_note(p2, 0, MIAU_C5, 0);
     miau_pattern_set_note(p2, 1, MIAU_A4, 0);
+
+    miau_pattern_set_note(p2, 8, MIAU_C4, 0);
+    miau_pattern_set_note(p2, 9, MIAU_C4, 0);
+    miau_pattern_set_note(p2, 10, MIAU_C4, 0);
+    miau_pattern_set_note(p2, 11, MIAU_C4, 0);
 
     int base_note = MIAU_C4;
     #if 0
@@ -73,7 +92,8 @@ int main(int argc, char** argv) {
     miau_pattern_set_note(pt, 12, MIAU_A4, 0);
     #endif
     for (int i = 0; i < 16; i++) {
-      miau_pattern_set_note(pt, i, base_note+i, 0);
+      miau_pattern_set_note(pt, i, notes[i], 0);
+//        miau_pattern_set_note(p2, i, notes[i]+4, 0);
     }
 #if 0
     mi_Sound* snd = miau_create_sound(1, 32);
