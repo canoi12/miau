@@ -34,6 +34,7 @@ struct mi_Channel {
     double gain;
     double pulse_width;
     int pattern_count;
+    mi_Event event;
     mi_Note note;
     mi_Pattern patterns[MIAU_MAX_PATTERNS];
 };
@@ -158,6 +159,7 @@ static void s_update_sequencer(mi_System* s, mi_Sequencer* seq, int len) {
         mi_Channel* ch = seq->channels + i;
         mi_Event ev = ch->patterns[pattern].events[seq->current_line];
         if (EVENT_MASK(ev) == MIAU_NOP) continue;
+        ch->event = ev;
         if (EVENT_MASK(ev) == MIAU_BREAK) {
             memset(&ch->note, 0, sizeof(mi_Note));
             // fprintf(stdout, "[miau] break;\n");
@@ -215,6 +217,7 @@ void miau_sequencer_set_speed(mi_Sequencer* seq, float speed) {
 void miau_sequencer_set_playing(mi_Sequencer* seq, int playing) {
     if (!seq) return;
     seq->playing = playing;
+    seq->current_frame = 0;
 }
 
 mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index) {
@@ -253,6 +256,29 @@ mi_Pattern* miau_channel_get_pattern(mi_Channel* c, int index) {
     return c->patterns + index;
 }
 
+void miau_channel_play_event(mi_Channel* ch, mi_Event ev) {
+    if (!ch) return;
+    ch->event = ev;
+    if (EVENT_MASK(ev) == MIAU_NOP) return;
+    if (EVENT_MASK(ev) == MIAU_BREAK) {
+        memset(&ch->note, 0, sizeof(mi_Note));
+        // fprintf(stdout, "[miau] break;\n");
+    }
+    else if (EVENT_MASK(ev) == MIAU_PLAY_NOTE) {
+        mi_Note* n = &(ch->note);
+        int note = NOTE_MASK(ev);
+        int octave = OCTAVE_MASK(ev);
+        int offset = octave * 12;
+        n->frequency = frequency_list[note + offset];
+        // fprintf(stdout, "[miau] (%d) %s%d, freq %f\n", offset, note_symbols[note], octave, n->frequency);
+    }
+}
+
+mi_Event miau_channel_get_event(mi_Channel* ch) {
+    if (!ch) return 0;
+    return ch->event;
+}
+
 // Frame
 
 void miau_frame_set_pattern(mi_Frame* frame, int channel, char pattern) {
@@ -262,6 +288,10 @@ void miau_frame_set_pattern(mi_Frame* frame, int channel, char pattern) {
 }
 
 // Pattern
+void miau_pattern_clear(mi_Pattern* p) {
+    if (!p) return;
+    memset(p, 0, sizeof(mi_Pattern));
+}
 
 void miau_pattern_set_event(mi_Pattern* p, int index, mi_Event event) {
     if (!p) return;

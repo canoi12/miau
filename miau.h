@@ -104,6 +104,8 @@ MIAUAPI void miau_sequencer_restart(mi_Sequencer* seq);
 
 // Channel
 MIAUAPI void miau_channel_set_waveform(mi_Channel*, int waveform);
+MIAUAPI void miau_channel_play_event(mi_Channel*, mi_Event ev);
+MIAUAPI mi_Event miau_channel_get_event(mi_Channel*);
 MIAUAPI mi_Pattern* miau_channel_get_pattern(mi_Channel*, int index);
 
 // Frame
