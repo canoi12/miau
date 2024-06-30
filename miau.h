@@ -25,6 +25,9 @@
 #define MIAU_CREATE_BREAK() (0x10000000)
 #define MIAU_CREATE_NOTE(note, octave) (0x20000000 | ((note & 0xf) << 24) | ((octave & 0xf) << 20))
 
+#define MIAU_GET_NOTE(event) (((event) & 0x0f000000) >> 24)
+#define MIAU_GET_OCTAVE(event) (((event) & 0x00f00000) >> 20)
+
 enum {
     MIAU_SINE = 1,
     MIAU_SQUARE,
@@ -109,6 +112,7 @@ MIAUAPI void miau_frame_set_pattern(mi_Frame*, int channel, char pattern);
 // Pattern
 MIAUAPI void miau_pattern_clear(mi_Pattern*);
 MIAUAPI void miau_pattern_set_event(mi_Pattern*, int index, mi_Event event);
+MIAUAPI mi_Event miau_pattern_get_event(mi_Pattern*, int index);
 #if defined(__cplusplus)
 }
 #endif

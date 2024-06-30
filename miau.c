@@ -153,14 +153,14 @@ static void s_update_sequencer(mi_System* s, mi_Sequencer* seq, int len) {
     }
 
     for (int i = 0; i < MIAU_MAX_CHANNELS; i++) {
-        fprintf(stdout, "[miau] channel %d\n", i);
+        // fprintf(stdout, "[miau] channel %d\n", i);
         int pattern = (int)seq->frames[seq->current_frame].data[i];
         mi_Channel* ch = seq->channels + i;
         mi_Event ev = ch->patterns[pattern].events[seq->current_line];
         if (EVENT_MASK(ev) == MIAU_NOP) continue;
         if (EVENT_MASK(ev) == MIAU_BREAK) {
             memset(&ch->note, 0, sizeof(mi_Note));
-            fprintf(stdout, "[miau] break;\n");
+            // fprintf(stdout, "[miau] break;\n");
         }
         if (EVENT_MASK(ev) == MIAU_PLAY_NOTE) {
             mi_Note* n = &(ch->note);
@@ -168,7 +168,7 @@ static void s_update_sequencer(mi_System* s, mi_Sequencer* seq, int len) {
             int octave = OCTAVE_MASK(ev);
             int offset = octave * 12;
             n->frequency = frequency_list[note + offset];
-            fprintf(stdout, "[miau] (%d) %s%d, freq %f\n", offset, note_symbols[note], octave, n->frequency);
+            // fprintf(stdout, "[miau] (%d) %s%d, freq %f\n", offset, note_symbols[note], octave, n->frequency);
         }
     }
 }
@@ -267,4 +267,10 @@ void miau_pattern_set_event(mi_Pattern* p, int index, mi_Event event) {
     if (!p) return;
     if (index < 0 || index >= MIAU_MAX_NOTES) return;
     p->events[index] = event;
+}
+
+mi_Event miau_pattern_get_event(mi_Pattern* p, int index) {
+    if (!p) return 0;
+    if (index < 0 || index >= MIAU_MAX_NOTES) return 0;
+    return p->events[index];
 }
