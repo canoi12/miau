@@ -20,7 +20,6 @@ static const char* note_symbols[] = {"C-", "C#", "D-", "D#", "E", "F-", "F#", "G
 
 struct mi_Note {
     char value;
-    char octave_volume;
     double frequency;
     unsigned int effect;
 };
@@ -32,6 +31,8 @@ struct mi_Pattern {
 struct mi_Channel {
     int waveform;
     double phase;
+    double gain;
+    double pulse_width;
     int pattern_count;
     mi_Note note;
     mi_Pattern patterns[MIAU_MAX_PATTERNS];
@@ -117,7 +118,7 @@ static double _process_channel(mi_System* s, mi_Channel* ch) {
             sample = sin(ch->phase * PI2);
             break;
         case MIAU_SQUARE:
-            sample = ch->phase < 0.5 ? 1.0 : -1.0;
+            sample = ch->phase < ch->pulse_width ? 1.0 : -1.0;
             break;
         case MIAU_SAWTOOTH:
             sample = 2.0 * fmod(ch->phase, 1.0) - 1.0;
@@ -132,7 +133,7 @@ static double _process_channel(mi_System* s, mi_Channel* ch) {
     ch->phase += freq / s->sample_rate;
     if (ch->phase >= 1.0) ch->phase -= 1.0;
 
-    return sample;
+    return sample * ch->gain;
 }
 
 static void s_update_sequencer(mi_System* s, mi_Sequencer* seq, int len) {
@@ -233,6 +234,17 @@ void miau_channel_set_waveform(mi_Channel* c, int waveform) {
     if (!c) return;
     if (waveform < MIAU_SINE || waveform > MIAU_NOISE) return;
     c->waveform = waveform;
+    switch (waveform) {
+        case MIAU_SQUARE: {
+            c->gain = 1.0;
+            c->pulse_width = 0.5;
+        }
+        break;
+        case MIAU_TRIANGLE: {
+            c->gain = 2.0;
+        }
+        break;
+    }
 }
 
 mi_Pattern* miau_channel_get_pattern(mi_Channel* c, int index) {

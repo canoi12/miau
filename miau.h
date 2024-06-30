@@ -22,6 +22,7 @@
 // 0x010A23
 // event|note octave|effect arg0|arg1
 
+#define MIAU_CREATE_BREAK() (0x10000000)
 #define MIAU_CREATE_NOTE(note, octave) (0x20000000 | ((note & 0xf) << 24) | ((octave & 0xf) << 20))
 
 enum {
@@ -60,6 +61,10 @@ enum {
     MIAU_EV_NONE,
     MIAU_EV_ARPEGGIO
 };
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 typedef unsigned int mi_Event;
 typedef struct mi_Note mi_Note;
@@ -104,6 +109,9 @@ MIAUAPI void miau_frame_set_pattern(mi_Frame*, int channel, char pattern);
 // Pattern
 MIAUAPI void miau_pattern_clear(mi_Pattern*);
 MIAUAPI void miau_pattern_set_event(mi_Pattern*, int index, mi_Event event);
+#if defined(__cplusplus)
+}
+#endif
 #if 0
 MIAUAPI mi_Channel* miau_create_channel(int waveform, int size);
 MIAUAPI void miau_destroy_channel(mi_Channel* c);
