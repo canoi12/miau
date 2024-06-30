@@ -32,10 +32,11 @@ while (sequencer_is_playing(seq));
 miau_sequencer_stop(seq);
 */
 
-int notes[] = {
-        MIAU_G4, MIAU_A4, MIAU_B4, MIAU_D5, MIAU_D5, MIAU_B4, MIAU_C5,
-        MIAU_G4, MIAU_A4, MIAU_B4, MIAU_D5, MIAU_D5, MIAU_C5, MIAU_B4,
-        MIAU_BREAK, MIAU_BREAK
+mi_Event events[] = {
+        MIAU_CREATE_NOTE(MIAU_G, 4), MIAU_CREATE_NOTE(MIAU_A, 4), MIAU_CREATE_NOTE(MIAU_B, 4), MIAU_CREATE_NOTE(MIAU_D, 5),
+        MIAU_CREATE_NOTE(MIAU_D, 5), MIAU_CREATE_NOTE(MIAU_B, 4), MIAU_CREATE_NOTE(MIAU_C, 5), MIAU_CREATE_NOTE(MIAU_G, 4),
+        MIAU_CREATE_NOTE(MIAU_A, 4), MIAU_CREATE_NOTE(MIAU_B, 4), MIAU_CREATE_NOTE(MIAU_D, 5), MIAU_CREATE_NOTE(MIAU_D, 5),
+        MIAU_CREATE_NOTE(MIAU_C, 5), MIAU_CREATE_NOTE(MIAU_B,  4), 0x1 << 28, 0x1 << 28
 };
 
 void audio_callback(void* userdata, Uint8* stream, int len) {
@@ -64,51 +65,33 @@ int main(int argc, char** argv) {
     mi_Channel* ch = miau_sequencer_get_channel(seq, 0);
     mi_Pattern* pt = miau_channel_get_pattern(ch, 0);
     miau_channel_set_waveform(ch, MIAU_TRIANGLE);
+    for (int i = 0; i < 16; i++) {
+        // miau_pattern_set_note(pt, i, notes[i], 0);
+        miau_pattern_set_event(pt, i, events[i]);
+    }
+    pt = miau_channel_get_pattern(ch, 1);
+    for (int i = 0; i < 16; i++) {
+        miau_pattern_set_event(pt, i, events[16 - i - 1]);
+    }
+
+    miau_save_project(s, "music.miau");
+
+    mi_Frame* frame = miau_sequencer_get_frame(seq, 1);
+    miau_frame_set_pattern(frame, 0, 1);
 
     ch = miau_sequencer_get_channel(seq, 1);
     miau_channel_set_waveform(ch, MIAU_TRIANGLE);
     mi_Pattern* p2 = miau_channel_get_pattern(ch, 0);
-    miau_pattern_set_note(p2, 0, MIAU_C5, 0);
-    miau_pattern_set_note(p2, 1, MIAU_A4, 0);
+    miau_pattern_set_event(p2, 0, MIAU_CREATE_NOTE(MIAU_B, 4));
+    miau_pattern_set_event(p2, 1, MIAU_CREATE_NOTE(MIAU_CS, 5));
+    miau_pattern_set_event(p2, 2, MIAU_CREATE_NOTE(MIAU_DS, 5));
 
-    miau_pattern_set_note(p2, 8, MIAU_C4, 0);
-    miau_pattern_set_note(p2, 9, MIAU_C4, 0);
-    miau_pattern_set_note(p2, 10, MIAU_C4, 0);
-    miau_pattern_set_note(p2, 11, MIAU_C4, 0);
+    mi_Pattern* p3 = miau_channel_get_pattern(ch, )
 
-    int base_note = MIAU_C4;
-    #if 0
-    miau_pattern_set_note(pt, 0, MIAU_C4, 0);
-    miau_pattern_set_note(pt, 1, MIAU_D4, 0);
-    miau_pattern_set_note(pt, 2, MIAU_E4, 0);
-    miau_pattern_set_note(pt, 3, MIAU_F4, 0);
-    miau_pattern_set_note(pt, 4, MIAU_G4, 0);
-    miau_pattern_set_note(pt, 5, MIAU_A4, 0);
-    miau_pattern_set_note(pt, 6, MIAU_B4, 0);
-    miau_pattern_set_note(pt, 7, MIAU_C5, 0);
-    miau_pattern_set_note(pt, 8, MIAU_D5, 0);
-    miau_pattern_set_note(pt, 9, MIAU_E5, 0);
-    miau_pattern_set_note(pt, 10, MIAU_F5, 0);
-    miau_pattern_set_note(pt, 12, MIAU_A4, 0);
-    #endif
-    for (int i = 0; i < 16; i++) {
-      miau_pattern_set_note(pt, i, notes[i], 0);
-//        miau_pattern_set_note(p2, i, notes[i]+4, 0);
-    }
-#if 0
-    mi_Sound* snd = miau_create_sound(1, 32);
-    mi_Channel* c = miau_sound_get_channel(snd, 0);
-    miau_set_channel_waveform(c, MIAU_SINE);
-    // miau_channel_push(c, MIAU_G4, 0);
-    // miau_channel_push(c, MIAU_A4, 0);
-    miau_channel_push(c, MIAU_B4, 0);
-
-    miau_play_sound(snd);
-  #endif
-    // miau_sequencer_set_playing(seq, 1);
+    miau_sequencer_set_playing(seq, 1);
     printf("playing sound\n");
 
-    SDL_Delay(3000);
+    SDL_Delay(4000);
     int a;
     // scanf("%d", &a);
 

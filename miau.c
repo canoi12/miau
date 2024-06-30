@@ -9,28 +9,45 @@
 #define AMPLITUDE 28000
 #define PI2 6.28318530718
 
+#define EVENT_MASK(event) ((event & 0xf0000000) >> 28)
+#define NOTE_MASK(event) ((event & 0x0f000000) >> 24)
+#define OCTAVE_MASK(event) ((event & 0x00f00000) >> 20)
+#define EFFECT_MASK ((event & 0x000f0000) >> 16)
+#define ARG0_MASK ((event & 0x0000f000) >> 12)
+#define ARG1_MASK ((event & 0x00000f00) >> 8)
+
+static const char* note_symbols[] = {"C-", "C#", "D-", "D#", "E", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
+
 struct mi_Note {
+    char value;
+    char octave_volume;
     double frequency;
     unsigned int effect;
 };
 
 struct mi_Pattern {
-    mi_Note notes[MIAU_MAX_NOTES];
+    mi_Event events[MIAU_MAX_NOTES];
 };
 
 struct mi_Channel {
     int waveform;
     double phase;
     int pattern_count;
+    mi_Note note;
     mi_Pattern patterns[MIAU_MAX_PATTERNS];
+};
+
+struct mi_Frame {
+    char data[MIAU_MAX_CHANNELS];
 };
 
 struct mi_Sequencer {
     int playing;
     float time;
     float speed;
-    int current_line;
+    int current_line, current_frame;
     mi_Channel channels[MIAU_MAX_CHANNELS];
+    mi_Frame frames[MIAU_MAX_FRAMES];
 };
 
 typedef double(*mi_WaveFunc)(mi_Channel* c);
@@ -51,7 +68,6 @@ static mi_Config _config = {
 static mi_Note _break = {0.0, 0};
 
 const double frequency_list[] = {
-    0.0,
     // C     // C#    // D     // D#    // E     // F     // F#    // G     // G#    // A     // A#    // B
     16.35,   17.32,   18.35,   19.45,   20.60,   21.83,   23.12,   24.50,   25.96,   27.50,   29.14,   30.87,   // octave 1
     32.70,   34.65,   36.71,   38.89,   41.20,   43.65,   46.25,   49.00,   51.91,   55.00,   58.27,   61.74,   // octave 2
@@ -73,7 +89,7 @@ mi_System* miau_init(const mi_Config* c) {
     memset(s, 0, sizeof(*s));
     s->sample_rate = c->freq;
     s->channels = c->channels;
-    s->samples = c->channels;
+    s->samples = c->samples;
     return s;
 }
 
@@ -82,9 +98,19 @@ void miau_quit(mi_System* s) {
     free(s);
 }
 
-static double _process_channel(mi_System* s, int line, mi_Channel* ch) {
+void miau_save_project(mi_System* s, const char* filename) {
+    if (!s || !filename) return;
+    FILE* fp = fopen(filename, "wb");
+    for (int i = 0; i < MIAU_MAX_CHANNELS; i++) {
+        mi_Channel* ch = s->sequencers[0].channels + i;
+        fwrite(ch->patterns, sizeof(mi_Pattern), MIAU_MAX_PATTERNS, fp);
+    }
+    fclose(fp);
+}
+
+static double _process_channel(mi_System* s, mi_Channel* ch) {
     double sample = 0.0;
-    mi_Note* n = ch->patterns[0].notes + line;
+    mi_Note* n = &ch->note;
     double freq = n->frequency;
     switch (ch->waveform) {
         case MIAU_SINE:
@@ -109,15 +135,7 @@ static double _process_channel(mi_System* s, int line, mi_Channel* ch) {
     return sample;
 }
 
-void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
-    if (!stream) return;
-    if (len <= 0) return;
-    memset(stream, 0, len);
-    short* buffer = (short*)stream;
-    len = len / sizeof(short);
-
-    mi_Sequencer* seq = s->sequencers;
-
+static void s_update_sequencer(mi_System* s, mi_Sequencer* seq, int len) {
     seq->time += ((float)len / (float)s->sample_rate) * seq->speed;
     if (seq->time >= 1.f) {
         seq->time = 0.f;
@@ -126,15 +144,54 @@ void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
 
     if (seq->current_line >= MIAU_MAX_NOTES) {
         seq->current_line = 0;
+        seq->current_frame += 1;
     }
 
-    int line = seq->current_line;
+    if (seq->current_frame >= MIAU_MAX_FRAMES) {
+        seq->playing = 0;
+    }
 
-    fprintf(stdout, "line(%d) time(%f)\n", line, seq->time);
+    for (int i = 0; i < MIAU_MAX_CHANNELS; i++) {
+        fprintf(stdout, "[miau] channel %d\n", i);
+        int pattern = (int)seq->frames[seq->current_frame].data[i];
+        mi_Channel* ch = seq->channels + i;
+        mi_Event ev = ch->patterns[pattern].events[seq->current_line];
+        if (EVENT_MASK(ev) == MIAU_NOP) continue;
+        if (EVENT_MASK(ev) == MIAU_BREAK) {
+            memset(&ch->note, 0, sizeof(mi_Note));
+            fprintf(stdout, "[miau] break;\n");
+        }
+        if (EVENT_MASK(ev) == MIAU_PLAY_NOTE) {
+            mi_Note* n = &(ch->note);
+            int note = NOTE_MASK(ev);
+            int octave = OCTAVE_MASK(ev);
+            int offset = octave * 12;
+            n->frequency = frequency_list[note + offset];
+            fprintf(stdout, "[miau] (%d) %s%d, freq %f\n", offset, note_symbols[note], octave, n->frequency);
+        }
+    }
+}
+
+void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
+    if (!stream) return;
+    if (len <= 0) return;
+    memset(stream, 0, len);
+    short* buffer = (short*)stream;
+    len = len / sizeof(short);
+
+    for (int i = 0; i < MIAU_MAX_SEQUENCERS; i++) {
+        if (!s->sequencers[i].playing) continue;
+        s_update_sequencer(s, s->sequencers + i, len);
+    }
+
+    // fprintf(stdout, "line(%d) time(%f)\n", , seq->time);
     for (int i = 0; i < len; i++) {
         double sample = 0;
-        for (int j = 0; j < MIAU_MAX_CHANNELS; j++) {
-            sample += _process_channel(s, line, &(seq->channels[j]));
+        for (int j = 0; j < MIAU_MAX_SEQUENCERS; j++) {
+            mi_Sequencer* seq = s->sequencers + j;
+            if (!seq->playing) continue;
+            for (int c = 0; c < MIAU_MAX_CHANNELS; c++)
+                sample += _process_channel(s, seq->channels + c);
         }
         sample = (sample / MIAU_MAX_CHANNELS) * AMPLITUDE;
         buffer[i] += (short)sample;
@@ -165,6 +222,12 @@ mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index) {
     return seq->channels + index;
 }
 
+mi_Frame* miau_sequencer_get_frame(mi_Sequencer* seq, int index) {
+    if (!seq) return NULL;
+    if (index < 0 || index > MIAU_MAX_FRAMES) return NULL;
+    return seq->frames + index;
+}
+
 // Channel
 void miau_channel_set_waveform(mi_Channel* c, int waveform) {
     if (!c) return;
@@ -178,14 +241,20 @@ mi_Pattern* miau_channel_get_pattern(mi_Channel* c, int index) {
     return c->patterns + index;
 }
 
+// Frame
+
+void miau_frame_set_pattern(mi_Frame* frame, int channel, char pattern) {
+    if (!frame) return;
+    if (channel < 0 || channel >= MIAU_MAX_CHANNELS) return;
+    frame->data[channel] = pattern;
+}
+
 // Pattern
-void miau_pattern_set_note(mi_Pattern* p, int index, int note, int effect) {
+
+void miau_pattern_set_event(mi_Pattern* p, int index, mi_Event event) {
     if (!p) return;
-    if (index < 0 || index > MIAU_MAX_NOTES) return;
-    if (note < MIAU_BREAK || note > MIAU_B7) return;
-    mi_Note* n = p->notes + index;
-    n->frequency = frequency_list[note];
-    n->effect = effect;
+    if (index < 0 || index >= MIAU_MAX_NOTES) return;
+    p->events[index] = event;
 }
 
 #if 0
