@@ -86,8 +86,6 @@ int main(int argc, char** argv) {
     miau_pattern_set_event(p2, 1, MIAU_CREATE_NOTE(MIAU_CS, 5));
     miau_pattern_set_event(p2, 2, MIAU_CREATE_NOTE(MIAU_DS, 5));
 
-    mi_Pattern* p3 = miau_channel_get_pattern(ch, )
-
     miau_sequencer_set_playing(seq, 1);
     printf("playing sound\n");
 
