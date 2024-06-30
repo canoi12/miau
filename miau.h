@@ -112,24 +112,4 @@ MIAUAPI void miau_pattern_set_event(mi_Pattern*, int index, mi_Event event);
 #if defined(__cplusplus)
 }
 #endif
-#if 0
-MIAUAPI mi_Channel* miau_create_channel(int waveform, int size);
-MIAUAPI void miau_destroy_channel(mi_Channel* c);
-
-MIAUAPI void miau_set_channel_waveform(mi_Channel* c, int waveform);
-MIAUAPI void miau_resize_channel(mi_Channel* c, int size);
-
-MIAUAPI void miau_channel_push(mi_Channel* c, int note, int effect);
-MIAUAPI void miau_channel_seek(mi_Channel* c, int index);
-MIAUAPI int miau_channel_tell(mi_Channel* c);
-
-MIAUAPI mi_Sound* miau_create_sound(int channels, int size);
-MIAUAPI void miau_destroy_sound(mi_Sound*  sound);
-MIAUAPI void miau_sound_setup_channel(mi_Sound* sound, int index, int waveform, int size);
-MIAUAPI mi_Channel* miau_sound_get_channel(mi_Sound* sound, int index);
-
-MIAUAPI void miau_play_sound(mi_Sound* sound);
-MIAUAPI void miau_pause_sound(mi_Sound* sound);
-MIAUAPI void miau_stop_sound(mi_Sound* sound);
-#endif
 #endif /* _MIAU_H_ */
