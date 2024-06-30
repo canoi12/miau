@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     dev = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 1);
     SDL_PauseAudioDevice(dev, 0);
     mi_Sequencer* seq = miau_get_sequencer(s, 0);
-    miau_sequencer_set_speed(seq, 32.f);
+    miau_sequencer_set_speed(seq, 8.f);
 
     mi_Channel* ch = miau_sequencer_get_channel(seq, 0);
     miau_channel_set_waveform(ch, MIAU_TRIANGLE);
@@ -61,90 +61,93 @@ int main(int argc, char** argv) {
                 case SDL_KEYDOWN: {
                     switch (event.key.keysym.scancode) {
                         case SDL_SCANCODE_1:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_BREAK());
+                            miau_channel_play_event(ch, MIAU_CREATE_BREAK());
                             break;
                         case SDL_SCANCODE_Z:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_C, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_C, 4));
                             break;
                         case SDL_SCANCODE_S:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_CS, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_CS, 4));
                             break;
                         case SDL_SCANCODE_X:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_D, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_D, 4));
                             break;
                         case SDL_SCANCODE_D:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_DS, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_DS, 4));
                             break;
                         case SDL_SCANCODE_C:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_E, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_E, 4));
                             break;
                         case SDL_SCANCODE_V:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_F, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_F, 4));
                             break;
                         case SDL_SCANCODE_G:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_FS, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_FS, 4));
                             break;
                         case SDL_SCANCODE_B:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_G, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_G, 4));
                             break;
                         case SDL_SCANCODE_H:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_GS, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_GS, 4));
                             break;
                         case SDL_SCANCODE_N:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_A, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_A, 4));
                             break;
                         case SDL_SCANCODE_J:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_AS, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_AS, 4));
                             break;
                         case SDL_SCANCODE_M:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_B, 4));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_B, 4));
                             break;
                         case SDL_SCANCODE_Q:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_C, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_C, 5));
                             break;
                         case SDL_SCANCODE_2:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_CS, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_CS, 5));
                             break;
                         case SDL_SCANCODE_W:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_D, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_D, 5));
                             break;
                         case SDL_SCANCODE_3:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_DS, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_DS, 5));
                             break;
                         case SDL_SCANCODE_E:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_E, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_E, 5));
                             break;
                         case SDL_SCANCODE_R:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_F, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_F, 5));
                             break;
                         case SDL_SCANCODE_5:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_FS, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_FS, 5));
                             break;
                         case SDL_SCANCODE_T:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_G, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_G, 5));
                             break;
                         case SDL_SCANCODE_6:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_GS, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_GS, 5));
                             break;
                         case SDL_SCANCODE_Y:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_A, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_A, 5));
                             break;
                         case SDL_SCANCODE_7:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_AS, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_AS, 5));
                             break;
                         case SDL_SCANCODE_U:
-                            miau_pattern_set_event(pat, 0, MIAU_CREATE_NOTE(MIAU_B, 5));
+                            miau_channel_play_event(ch, MIAU_CREATE_NOTE(MIAU_B, 5));
                             break;
                     }
                     miau_sequencer_set_playing(seq, 1);
                 }
                 break;
+                case SDL_KEYUP:
+                    miau_channel_play_event(ch, MIAU_CREATE_BREAK());
+                    break;
             }
         }
         SDL_RenderClear(renderer);
 
         SDL_Rect rect = {0, 48, 32, 128};
-        int ev = miau_pattern_get_event(pat, 0);
+        mi_Event ev = miau_channel_get_event(ch);
         int notes[] = {MIAU_C, MIAU_D, MIAU_E, MIAU_F, MIAU_G, MIAU_A, MIAU_B};
         int octave = 4;
         for (int i = 0; i < 14; i++) {
