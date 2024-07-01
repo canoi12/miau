@@ -82,6 +82,7 @@ typedef struct {
     int freq;
     int channels;
     int samples;
+    int bits_per_sample;
 } mi_Config;
 
 MIAUAPI mi_System* miau_init(const mi_Config* config);
@@ -90,6 +91,7 @@ MIAUAPI void miau_quit(mi_System*);
 MIAUAPI void miau_save_project(mi_System*, const char* filename);
 
 MIAUAPI void miau_generate_sample(mi_System*, unsigned char* stream, int len);
+MIAUAPI void miau_export_wav(mi_System*, int sequencer, const char* filename);
 
 // Sequencer
 MIAUAPI mi_Sequencer* miau_get_sequencer(mi_System*, int index);
@@ -101,6 +103,8 @@ MIAUAPI float miau_sequencer_get_speed(mi_Sequencer* seq);
 MIAUAPI void miau_sequencer_set_playing(mi_Sequencer* seq, int playing);
 MIAUAPI int miau_sequencer_get_playing(mi_Sequencer* seq);
 MIAUAPI void miau_sequencer_restart(mi_Sequencer* seq);
+
+MIAUAPI void miau_sequencer_save(mi_Sequencer*, const char* filename);
 
 // Channel
 MIAUAPI void miau_channel_set_waveform(mi_Channel*, int waveform);

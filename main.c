@@ -21,6 +21,12 @@ mi_Event events1[] = {
         MIAU_CREATE_NOTE(MIAU_B, 4), MIAU_CREATE_BREAK(), MIAU_CREATE_NOTE(MIAU_C, 5)
 };
 
+mi_Event events2[] = {
+        MIAU_CREATE_NOTE(MIAU_G, 4), MIAU_CREATE_NOTE(MIAU_G, 4)
+};
+
+#define CURR_EVENT events1
+
 void audio_callback(void* userdata, Uint8* stream, int len) {
     mi_System* s = (mi_System*)userdata;
     miau_generate_sample(s, stream, len);
@@ -47,17 +53,15 @@ int main(int argc, char** argv) {
     mi_Channel* ch = miau_sequencer_get_channel(seq, 0);
     mi_Pattern* pt = miau_channel_get_pattern(ch, 0);
     miau_channel_set_waveform(ch, MIAU_SQUARE);
-    int size = sizeof(events1) / sizeof(mi_Event);
+    int size = sizeof(CURR_EVENT) / sizeof(mi_Event);
     for (int i = 0; i < size; i++) {
         // miau_pattern_set_note(pt, i, notes[i], 0);
-        miau_pattern_set_event(pt, i, events1[i]);
+        miau_pattern_set_event(pt, i, CURR_EVENT[i]);
     }
     pt = miau_channel_get_pattern(ch, 1);
     for (int i = 0; i < size; i++) {
-        miau_pattern_set_event(pt, i, events1[size - i - 1]);
+        miau_pattern_set_event(pt, i, CURR_EVENT[size - i - 1]);
     }
-
-    miau_save_project(s, "music.miau");
 
     mi_Frame* frame = miau_sequencer_get_frame(seq, 1);
     miau_frame_set_pattern(frame, 0, 1);
@@ -69,6 +73,8 @@ int main(int argc, char** argv) {
     miau_pattern_set_event(p2, 1, MIAU_CREATE_NOTE(MIAU_CS, 5));
     miau_pattern_set_event(p2, 2, MIAU_CREATE_NOTE(MIAU_DS, 5));
     miau_pattern_set_event(p2, 6, MIAU_CREATE_NOTE(MIAU_D, 3));
+
+    miau_export_wav(s, 0, "music.wav");
 
     miau_sequencer_set_playing(seq, 1);
     printf("playing sound\n");

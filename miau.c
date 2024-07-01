@@ -18,6 +18,33 @@
 
 static const char* note_symbols[] = {"C-", "C#", "D-", "D#", "E", "F-", "F#", "G-", "G#", "A-", "A#", "B-"};
 
+struct mi_Header {
+    float speed;
+    char waveforms[4];
+};
+
+struct mi_WavHeader {
+    char id[4]; /* RIFF */
+    unsigned int chunk_size;
+    char format[4];
+    char subchunk1_id[4];
+    unsigned int subchunk1_size;
+    unsigned short audio_format;
+    unsigned short channels;
+    unsigned int sample_rate;
+    unsigned int byte_rate;
+    unsigned short block_align;
+    unsigned short bits_per_sample;
+    char subchunk2_id[4];
+    unsigned int subchunk2_size;
+};
+
+struct mi_Wav {
+    struct mi_WavHeader header;
+    int data_size;
+    void* data;
+};
+
 struct mi_Note {
     char value;
     double frequency;
@@ -58,13 +85,15 @@ struct mi_System {
     double sample_rate;
     int channels;
     int samples;
+    int bits_per_sample;
     mi_Sequencer sequencers[MIAU_MAX_SEQUENCERS];
 };
 
 static mi_Config _config = {
     .freq = 44100,
     .channels = 1,
-    .samples = 2048
+    .samples = 2048,
+    .bits_per_sample = 16
 };
 
 static mi_Note _break = {0.0, 0};
@@ -92,6 +121,7 @@ mi_System* miau_init(const mi_Config* c) {
     s->sample_rate = c->freq;
     s->channels = c->channels;
     s->samples = c->samples;
+    s->bits_per_sample = c->bits_per_sample;
     return s;
 }
 
@@ -201,6 +231,50 @@ void miau_generate_sample(mi_System* s, unsigned char* stream, int len) {
     }
 }
 
+void miau_export_wav(mi_System* sys, int sequencer, const char* filename) {
+    if (!sys || !filename) return;
+    if (sequencer < 0 || sequencer >= MIAU_MAX_SEQUENCERS) return;
+    mi_Sequencer* seq = sys->sequencers + sequencer;
+    int num_samples = sys->sample_rate * 4;
+
+    int subchunk2_size = num_samples * sys->channels * sys->bits_per_sample / 8;
+    int chunk_size = 36 + subchunk2_size;
+
+    struct mi_WavHeader header;
+    memcpy(header.id, "RIFF", 4);
+    header.chunk_size = chunk_size;
+    memcpy(header.format, "WAVE", 4);
+    memcpy(header.subchunk1_id, "fmt ", 4);
+    header.subchunk1_size = 16;
+    header.audio_format = 1;
+    header.channels = sys->channels;
+    header.sample_rate = sys->sample_rate;
+    header.byte_rate = sys->sample_rate * sys->channels * sys->bits_per_sample / 8;
+    header.block_align = sys->channels * sys->bits_per_sample / 8;
+    header.bits_per_sample = sys->bits_per_sample;
+    memcpy(header.subchunk2_id, "data", 4);
+    header.subchunk2_size = subchunk2_size;
+
+    FILE* fp = fopen(filename, "wb");
+    fwrite(&header, 1, sizeof(header), fp);
+
+    short* buffer = malloc(sys->samples * sizeof(short));
+    for (int i = 0; i < num_samples; i += sys->samples) {
+        s_update_sequencer(sys, seq, sys->samples);
+        memset(buffer, 0, sys->samples * sizeof(short));
+        for (int j = 0; j < sys->samples; j++) {
+            double sample = 0;
+            for (int c = 0; c < MIAU_MAX_CHANNELS; c++)
+                sample += _process_channel(sys, seq->channels + c);
+            sample = (sample / MIAU_MAX_CHANNELS) * AMPLITUDE;
+            buffer[j] += (short)sample;
+        }
+        fwrite(buffer, 1, sys->samples * sizeof(short), fp);
+    }
+    free(buffer);
+    fclose(fp);
+}
+
 // Sequencer
 
 mi_Sequencer* miau_get_sequencer(mi_System* s, int index) {
@@ -218,6 +292,8 @@ void miau_sequencer_set_playing(mi_Sequencer* seq, int playing) {
     if (!seq) return;
     seq->playing = playing;
     seq->current_frame = 0;
+    seq->time = 0.f;
+    seq->current_line = 0;
 }
 
 mi_Channel* miau_sequencer_get_channel(mi_Sequencer* seq, int index) {
@@ -230,6 +306,21 @@ mi_Frame* miau_sequencer_get_frame(mi_Sequencer* seq, int index) {
     if (!seq) return NULL;
     if (index < 0 || index > MIAU_MAX_FRAMES) return NULL;
     return seq->frames + index;
+}
+
+void miau_sequencer_save(mi_Sequencer* seq, const char* filename) {
+    if (!seq || !filename) return;
+    FILE* fp = fopen(filename, "wb");
+    struct mi_Header header;
+    header.speed = seq->speed;
+    for (int i = 0; i < MIAU_MAX_CHANNELS; i++) {
+        header.waveforms[i] = seq->channels[i].waveform;
+    }
+    fwrite(&header, 1, sizeof(struct mi_Header), fp);
+    for (int i = 0; i < MIAU_MAX_CHANNELS; i++) {
+        fwrite(seq->channels[i].patterns, sizeof(mi_Pattern), MIAU_MAX_PATTERNS, fp);
+    }
+    fclose(fp);
 }
 
 // Channel

@@ -19,3 +19,12 @@ if (MSVC)
     add_custom_command(TARGET example POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SDL_LIB} "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
 endif ()
+
+add_executable(keyboard keyboard.c)
+target_link_libraries(keyboard miau ${SDL2_LIBRARIES})
+
+if (MSVC)
+    file(GLOB SDL_LIB SDL2/lib/x64/SDL2.dll)
+    add_custom_command(TARGET keyboard POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${SDL_LIB} "$<TARGET_FILE_DIR:${PROJECT_NAME}>")
+endif ()
