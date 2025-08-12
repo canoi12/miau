@@ -1,3 +1,5 @@
-# MiniAudio
+# MIGRATING DEVELOPMENT TO [codeberg](https://codeberg.org/canoi12/miau)
 
-Simple agnostic sequencer library for creating sounds.
+# ~~MiniAudio~~
+
+~~Simple agnostic sequencer library for creating sounds.~~
